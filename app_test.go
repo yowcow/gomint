@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,96 @@ import (
 func TestNew(t *testing.T) {
 	logbuf := new(bytes.Buffer)
 	logger := log.New(logbuf, "", 0)
-	_ = New(logger)
+	_ = New("/", logger)
+}
+
+func TestStatic(t *testing.T) {
+	f, err := os.Open("static/foo/bar/test.jpg")
+	if err != nil {
+		t.Fatal("expected no error but got", err)
+	}
+	defer f.Close()
+	jpgbody, err := ioutil.ReadAll(f)
+	if err != nil {
+		t.Fatal("expected no error but got", err)
+	}
+
+	type Case struct {
+		Subtest             string
+		Path                string
+		ExpectedStatus      int
+		ExpectedContentType string
+		ExpectedBody        []byte
+	}
+	cases := []Case{
+		{
+			"non existing file",
+			"/foo/bar.html",
+			404,
+			"text/html; charset=utf-8",
+			[]byte("<h1>File Not Found</h1>\n"),
+		},
+		{
+			"existing HTML file",
+			"/foo/bar/index.html",
+			200,
+			"text/html; charset=utf-8",
+			[]byte("<h1>Hello world</h1>\n"),
+		},
+		{
+			"existing text file",
+			"/foo/bar/index.txt",
+			200,
+			"text/plain; charset=utf-8",
+			[]byte("Hello world\n"),
+		},
+		{
+			"existing jpg file",
+			"/foo/bar/test.jpg",
+			200,
+			"image/jpeg",
+			jpgbody,
+		},
+		{
+			"existing dir",
+			"/foo/bar/",
+			404,
+			"text/html; charset=utf-8",
+			[]byte("<h1>File Not Found</h1>\n"),
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.Subtest, func(t *testing.T) {
+			logbuf := new(bytes.Buffer)
+			logger := log.New(logbuf, "", 0)
+			app := New("static", logger)
+
+			handler := app.Static()
+			svr := httptest.NewServer(handler)
+			defer svr.Close()
+
+			req, err := http.NewRequest("GET", svr.URL+c.Path, nil)
+			if err != nil {
+				t.Fatal("expected no error but got ", err)
+			}
+			client := http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Fatal("expected no error but got ", err)
+			}
+			defer resp.Body.Close()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatal("expected no error but got ", err)
+			}
+
+			assert.Equal(t, c.ExpectedContentType, resp.Header.Get("Content-Type"))
+			assert.Equal(t, c.ExpectedStatus, resp.StatusCode)
+			assert.Equal(t, c.ExpectedBody, body)
+		})
+	}
 }
 
 func TestDispatch(t *testing.T) {
@@ -81,7 +171,7 @@ func TestDispatch(t *testing.T) {
 		t.Run(c.Subtest, func(t *testing.T) {
 			logbuf := new(bytes.Buffer)
 			logger := log.New(logbuf, "", 0)
-			app := New(logger)
+			app := New("/", logger)
 
 			handler := app.Dispatcher(c.Funcs...)
 			svr := httptest.NewServer(handler)

@@ -33,7 +33,7 @@ func TestJSON(t *testing.T) {
 	err := ctx.JSON(data)
 
 	assert.Nil(t, err)
-	assert.Equal(t, "application/json; charset=UTF-8", w.Header().Get("Content-Type"))
+	assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"))
 	assert.Equal(t, `{"Hello":"World","ID":1234}`+"\n", w.Body.String())
 }
 
@@ -47,6 +47,6 @@ func TestHTML(t *testing.T) {
 	err := ctx.HTML("hogehoge fugafuga")
 
 	assert.Nil(t, err)
-	assert.Equal(t, "text/html; charset=UTF-8", w.Header().Get("Content-Type"))
+	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 	assert.Equal(t, `hogehoge fugafuga`+"\n", w.Body.String())
 }

@@ -30,14 +30,14 @@ func (ctx Context) Request() *http.Request {
 
 func (ctx Context) JSON(data interface{}) error {
 	w := ctx.w
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	encoder := json.NewEncoder(w)
 	return encoder.Encode(data)
 }
 
 func (ctx Context) HTML(data string) error {
 	w := ctx.w
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, err := fmt.Fprintln(w, data)
 	return err
 }
