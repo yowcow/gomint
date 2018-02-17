@@ -1,4 +1,4 @@
-package gomint
+package mint
 
 import (
 	"bytes"

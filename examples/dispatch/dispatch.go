@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yowcow/gomint"
+	"github.com/yowcow/gomint/mint"
 )
 
 func main() {
@@ -25,13 +25,13 @@ func main() {
 	}
 
 	logger := log.New(os.Stdout, "", log.LstdFlags)
-	app := gomint.New(dir, logger)
+	app := mint.New(dir, logger)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.Dispatcher(gomint.HandlerFunc(func(ctx gomint.Context) error {
+	mux.HandleFunc("/", app.Dispatcher(mint.HandlerFunc(func(ctx mint.Context) error {
 		return ctx.HTML("This is /")
 	})))
-	mux.HandleFunc("/hello/", app.Dispatcher(gomint.HandlerFunc(func(ctx gomint.Context) error {
+	mux.HandleFunc("/hello/", app.Dispatcher(mint.HandlerFunc(func(ctx mint.Context) error {
 		return ctx.HTML("Hello world")
 	})))
 	mux.HandleFunc("/foo/bar/", app.Static())

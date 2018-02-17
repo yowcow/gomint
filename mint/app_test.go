@@ -1,4 +1,4 @@
-package gomint
+package mint
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestStatic(t *testing.T) {
-	f, err := os.Open("static/foo/bar/test.jpg")
+	f, err := os.Open("../static/foo/bar/test.jpg")
 	if err != nil {
 		t.Fatal("expected no error but got", err)
 	}
@@ -79,7 +79,7 @@ func TestStatic(t *testing.T) {
 		t.Run(c.Subtest, func(t *testing.T) {
 			logbuf := new(bytes.Buffer)
 			logger := log.New(logbuf, "", 0)
-			app := New("static", logger)
+			app := New("../static", logger)
 
 			handler := app.Static()
 			svr := httptest.NewServer(handler)
