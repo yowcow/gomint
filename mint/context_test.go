@@ -50,3 +50,27 @@ func TestHTML(t *testing.T) {
 	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 	assert.Equal(t, `hogehoge fugafuga`+"\n", w.Body.String())
 }
+
+func TestRedirect(t *testing.T) {
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+	logbuf := new(bytes.Buffer)
+	logger := log.New(logbuf, "", 0)
+
+	ctx := NewContext(w, req, logger)
+	ctx.Redirect("/foo/bar?hoge=fuga")
+
+	assert.Equal(t, "/foo/bar?hoge=fuga", w.Header().Get("Location"))
+}
+
+func TestRedirectPermanently(t *testing.T) {
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+	logbuf := new(bytes.Buffer)
+	logger := log.New(logbuf, "", 0)
+
+	ctx := NewContext(w, req, logger)
+	ctx.RedirectPermanently("/foo/bar?hoge=fuga")
+
+	assert.Equal(t, "/foo/bar?hoge=fuga", w.Header().Get("Location"))
+}

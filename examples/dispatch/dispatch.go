@@ -34,6 +34,10 @@ func main() {
 	mux.HandleFunc("/hello/", app.Dispatcher(mint.HandlerFunc(func(ctx mint.Context) error {
 		return ctx.HTML("Hello world")
 	})))
+	mux.HandleFunc("/redirect", app.Dispatcher(mint.HandlerFunc(func(ctx mint.Context) error {
+		ctx.Redirect("/hello/")
+		return nil
+	})))
 	mux.HandleFunc("/foo/bar/", app.Static())
 
 	server := http.Server{

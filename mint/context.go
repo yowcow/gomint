@@ -41,3 +41,15 @@ func (ctx Context) HTML(data string) error {
 	_, err := fmt.Fprintln(w, data)
 	return err
 }
+
+func (ctx Context) Redirect(location string) {
+	w := ctx.w
+	w.Header().Set("Location", location)
+	w.WriteHeader(http.StatusFound)
+}
+
+func (ctx Context) RedirectPermanently(location string) {
+	w := ctx.w
+	w.Header().Set("Location", location)
+	w.WriteHeader(http.StatusMovedPermanently)
+}

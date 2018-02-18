@@ -198,3 +198,66 @@ func TestDispatch(t *testing.T) {
 		})
 	}
 }
+
+func TestRedirection(t *testing.T) {
+	logbuf := new(bytes.Buffer)
+	logger := log.New(logbuf, "", 0)
+	app := New("../static", logger)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redirect", app.Dispatcher(HandlerFunc(func(ctx Context) error {
+		ctx.Redirect("/foo/bar/index.html")
+		return nil
+	})))
+	mux.HandleFunc("/redirect-permanently", app.Dispatcher(HandlerFunc(func(ctx Context) error {
+		ctx.RedirectPermanently("/foo/bar/index.txt")
+		return nil
+	})))
+	mux.HandleFunc("/", app.Static())
+	svr := httptest.NewServer(mux)
+	defer svr.Close()
+
+	client := http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	type Case struct {
+		Subtest          string
+		Path             string
+		ExpectedStatus   int
+		ExpectedLocation string
+	}
+	cases := []Case{
+		{
+			"302 Found",
+			"/redirect",
+			302,
+			"/foo/bar/index.html",
+		},
+		{
+			"301 Moved Permanently",
+			"/redirect-permanently",
+			301,
+			"/foo/bar/index.txt",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.Subtest, func(t *testing.T) {
+			req, err := http.NewRequest("GET", svr.URL+c.Path, nil)
+			if err != nil {
+				t.Fatal("expected no error but got ", err)
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Fatal("expected no error but got ", err)
+			}
+			defer resp.Body.Close()
+
+			assert.Equal(t, c.ExpectedStatus, resp.StatusCode)
+			assert.Equal(t, c.ExpectedLocation, resp.Header.Get("Location"))
+		})
+	}
+}
