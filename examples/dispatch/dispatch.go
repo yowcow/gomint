@@ -10,6 +10,21 @@ import (
 	"github.com/yowcow/gomint/mint"
 )
 
+type MyApp struct{}
+
+func (a MyApp) DispatchRoot(ctx mint.Context) error {
+	return ctx.HTML("This is root")
+}
+
+func (a MyApp) DispatchHello(ctx mint.Context) error {
+	return ctx.HTML("Hello world")
+}
+
+func (a MyApp) DispatchRedirect(ctx mint.Context) error {
+	ctx.Redirect("/hello/")
+	return nil
+}
+
 func main() {
 	var dir string
 	var port int
@@ -25,20 +40,14 @@ func main() {
 	}
 
 	logger := log.New(os.Stdout, "", log.LstdFlags)
-	app := mint.New(dir, logger)
+	a := MyApp{}
+	mt := mint.New(dir, logger)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.Dispatcher(func(ctx mint.Context) error {
-		return ctx.HTML("This is /")
-	}))
-	mux.HandleFunc("/hello/", app.Dispatcher(func(ctx mint.Context) error {
-		return ctx.HTML("Hello world")
-	}))
-	mux.HandleFunc("/redirect", app.Dispatcher(func(ctx mint.Context) error {
-		ctx.Redirect("/hello/")
-		return nil
-	}))
-	mux.HandleFunc("/foo/bar/", app.Static())
+	mux.HandleFunc("/", mt.Dispatcher(a.DispatchRoot))
+	mux.HandleFunc("/hello/", mt.Dispatcher(a.DispatchHello))
+	mux.HandleFunc("/redirect", mt.Dispatcher(a.DispatchRedirect))
+	mux.HandleFunc("/foo/bar/", mt.Static())
 
 	server := http.Server{
 		Handler: mux,
