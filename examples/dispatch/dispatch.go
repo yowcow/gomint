@@ -28,16 +28,16 @@ func main() {
 	app := mint.New(dir, logger)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.Dispatcher(mint.HandlerFunc(func(ctx mint.Context) error {
+	mux.HandleFunc("/", app.Dispatcher(func(ctx mint.Context) error {
 		return ctx.HTML("This is /")
-	})))
-	mux.HandleFunc("/hello/", app.Dispatcher(mint.HandlerFunc(func(ctx mint.Context) error {
+	}))
+	mux.HandleFunc("/hello/", app.Dispatcher(func(ctx mint.Context) error {
 		return ctx.HTML("Hello world")
-	})))
-	mux.HandleFunc("/redirect", app.Dispatcher(mint.HandlerFunc(func(ctx mint.Context) error {
+	}))
+	mux.HandleFunc("/redirect", app.Dispatcher(func(ctx mint.Context) error {
 		ctx.Redirect("/hello/")
 		return nil
-	})))
+	}))
 	mux.HandleFunc("/foo/bar/", app.Static())
 
 	server := http.Server{
